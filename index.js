@@ -3,57 +3,51 @@ function main () {
     constructor (values = []) {
       this.values = values
     }
+    canAdd (value) {
+      const isEmpty = !this.values.length
+      const isSmallerPeg = this.values[this.values.length - 1] - value === 1
+      return isEmpty || isSmallerPeg
+    }
     add (value) {
-      if (!this.values.length) {
-        // Empty pole, can add value
-        this.values.push(value)
-        return true
-      }
-      // Check the last value
-      const curr = this.values[this.values.length - 1]
-      if (curr - value === 1) {
-        // One class bigger, can add it
-        this.values.push(value)
-        return true
-      }
-      return false
+      this.values.push(value)
+    }
+    canRemove () {
+      return this.values.length
     }
     remove () {
-      if (this.values.length) {
-        return this.values.pop()
-      }
-      return false
+      return this.values.pop()
     }
   }
   class Hanoi {
     constructor (poles) {
       this.poles = poles
     }
-    remove () {
-      const pole = Math.floor(Math.random() * this.poles.length)
-      const value = this.poles[pole].remove()
-
-      return [value, pole]
+    canRemove (pole) {
+      return this.poles[pole].canRemove()
+    }
+    remove (pole) {
+      return this.poles[pole].remove()
+    }
+    canAdd (pole, value) {
+      return this.poles[pole] && this.poles[pole].canAdd(value)
     }
     add (value) {
-      let pole
-      while (true) {
+      let pole = Math.floor(Math.random() * this.poles.length)
+      while (!this.canAdd(pole, value)) {
         pole = Math.floor(Math.random() * this.poles.length)
-        if (this.poles[pole].add(value)) {
-          break
-        }
       }
+      this.poles[pole].add(value)
       return pole
     }
     play () {
       let numberOfMoves = 0
       while (this.poles[this.poles.length - 1].values.length !== this.poles.length) {
-        const [peg, start] = this.remove()
-        if (peg !== false) {
-          const end = this.add(peg)
-          console.log(`move ${peg} from ${start} to ${end}`)
-          numberOfMoves += 1
-        }
+        const start = Math.floor(Math.random() * this.poles.length)
+        if (!this.canRemove(start)) continue
+        const peg = this.remove(start)
+        const end = this.add(peg)
+        console.log(`move ${peg} from ${start} to ${end}`)
+        numberOfMoves += 1
       }
       console.log(`completed in ${numberOfMoves} moves`, this.poles)
     }
