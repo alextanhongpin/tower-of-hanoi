@@ -25,8 +25,12 @@ function main () {
     canRemove (pole) {
       return this.poles[pole].canRemove()
     }
-    remove (pole) {
-      return this.poles[pole].remove()
+    remove () {
+      let pole = Math.floor(Math.random() * this.poles.length)
+      while (!this.canRemove(pole)) {
+        pole = Math.floor(Math.random() * this.poles.length)
+      }
+      return [this.poles[pole].remove(), pole]
     }
     canAdd (pole, value) {
       return this.poles[pole] && this.poles[pole].canAdd(value)
@@ -42,9 +46,7 @@ function main () {
     play () {
       let numberOfMoves = 0
       while (this.poles[this.poles.length - 1].values.length !== this.poles.length) {
-        const start = Math.floor(Math.random() * this.poles.length)
-        if (!this.canRemove(start)) continue
-        const peg = this.remove(start)
+        const [peg, start] = this.remove()
         const end = this.add(peg)
         console.log(`move ${peg} from ${start} to ${end}`)
         numberOfMoves += 1
