@@ -25,7 +25,7 @@ function main () {
     canRemove (pole) {
       return this.poles[pole].canRemove()
     }
-    remove () {
+    remove (yes) {
       let pole = Math.floor(Math.random() * this.poles.length)
       while (!this.canRemove(pole)) {
         pole = Math.floor(Math.random() * this.poles.length)
@@ -60,14 +60,6 @@ function main () {
     new Pole([])
   ])
   hanoi.play()
-  // move([[3, 2, 1], [], []])
-  // move([3, 2], [], [1]) // Pop the A one, push to the 3rd one
-  // move([3], [2], [1]) // Pop the B one, push to the 2nd one
-  // move([3], [2, 1], []) // Pop the A one, push to the 2nd one
-  // move([], [2, 1], [3]) // Pop the 1st one, push to the 3rd one
-  // move([1], [2], [3]) // Pop the 2nd one, push to 1st one...
-  // move([1], [], [3, 2])
-  // move([], [], [3, 2, 1])
 }
 
 main()
