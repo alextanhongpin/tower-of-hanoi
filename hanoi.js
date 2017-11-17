@@ -42,21 +42,22 @@ class Hanoi {
     }).reduce((a, b) => a.concat(b), [])
   }
   checkPossibleMoves (values) {
-    return this.combinations([1, 2, 3])
-  //   const output = Array(3).fill(0).map((_, i) => {
-  //     return Array(3).fill(0).map((_, j) => {
-  //       const arr = [...values.split('')]
-  //       arr[i] = 'abc'[j]
-  //       return arr.join('')
-  //     })
-  //   }).reduce((a, b) => a.concat(b))
+    // return this.combinations([1, 2, 3])
+    const output = Array(3).fill(0).map((_, i) => {
+      return Array(9).fill(0).map((_, j) => {
+        const arr = [...values.split('')]
+        arr[i] = 'abc'[j % 3]
+        return arr.join('')
+      })
+    }).reduce((a, b) => a.concat(b))
 
-  //   return [...new Set(output)]
+    return [...new Set(output)]
   }
   mapStrToPoles (values) {
     const a = values.match(/a/g)
     const b = values.match(/b/g)
     const c = values.match(/c/g)
+
     return [
       this.poleWithDiscs((a && a.length) || 0),
       this.poleWithDiscs((b && b.length) || 0),
@@ -78,22 +79,30 @@ class Hanoi {
   }
   state (poles) {
     return poles.reduce((a, b, i) => {
-      let mark = 'a'
-      switch (i) {
-        case 0:
-          mark = 'a'
-          break
-        case 1:
-          mark = 'b'
-          break
-        case 2:
-          mark = 'c'
-          break
+      if (b.values.length === 0) {
+        return a + ''
       }
-      a += b.values.includes(1) ? mark : ''
-      a += b.values.includes(2) ? mark : ''
-      a += b.values.includes(3) ? mark : ''
-      return a
+      if (b.values.length === 1) {
+        const index = b.values[0] - 1
+        return a + 'abc'[index]
+      } else if (b.values.length === 2) {
+        const index = b.values[1] - 1
+        a += 'abc'[index]
+        a += 'abc'[index]
+        return a
+      } else {
+        const index = b.values[2] - 1
+        a += 'abc'[index]
+        a += 'abc'[index]
+        a += 'abc'[index]
+        return a
+      }
+      // a += b.values.includes(1) ? 'abc'[i] : ''
+      // a += b.values.includes(2) ? 'abc'[i] : ''
+      // a += b.values.includes(3) ? 'abc'[i] : ''
+
+      // console.log('#alert this.state', a, poles)
+      // return a
     }, '')
   }
   numberOfDiscs (poles) {
@@ -112,11 +121,13 @@ class Hanoi {
       }
     }
     let qState = {}
+    const action = this.state([
+      { values: [3, 2, 1]},
+      { values: []},
+      { values: []}
+    ])
 
-    // rewardMatrix['Q(003(::1,2,3), 1:2:1)'] = 100
-    // rewardMatrix['acc']['ccc'] = 100
-    // rewardMatrix['bcc']['ccc'] = 100
-
+    // console.log(action)
     Array(10).fill(0).forEach((_, i) => {
       let poles = JSON.parse(JSON.stringify(this.poles))
       poles = poles.map((pole) => {
@@ -141,20 +152,15 @@ class Hanoi {
         const r = rewardMatrix[state] && rewardMatrix[state][action] ? rewardMatrix[state][action] : 0
         console.log('this.checkPossibleMoves(action)', this.checkPossibleMoves(action))
         const maxReward = Math.max(...this.checkPossibleMoves(action).map((move) => {
-          // if (!qState[state]) {
-          //   qState[state] = {}
-          // }
-          // if (!qState[state][move]) {
-          //   qState[state][move] = 0
-          // }
           return qState[action] && qState[action][move] ? qState[action][move] : 0
         }))
+
         console.log('maxreward', maxReward)
         qState[state][action] = r + 0.8 * maxReward
 
         numberOfMoves += 1
       }
-      console.log(`completed in ${numberOfMoves} moves with #lastStep`, poles, qState)
+      console.log(`completed in ${numberOfMoves} moves with #lastStep`, qState)
     })
   }
 }
