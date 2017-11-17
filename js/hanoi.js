@@ -78,32 +78,21 @@ class Hanoi {
     return [poles, pole]
   }
   state (poles) {
-    return poles.reduce((a, b, i) => {
-      if (b.values.length === 0) {
-        return a + ''
+    const output = Array(3).fill(0)
+    for (let i = 0; i < poles.length; i += 1) {
+      const value = poles[i].values
+      const key = 'abc'[i]
+      if (value.indexOf(1) !== -1 && output[0] === 0) {
+        output[0] = key
       }
-      if (b.values.length === 1) {
-        const index = b.values[0] - 1
-        return a + 'abc'[index]
-      } else if (b.values.length === 2) {
-        const index = b.values[1] - 1
-        a += 'abc'[index]
-        a += 'abc'[index]
-        return a
-      } else {
-        const index = b.values[2] - 1
-        a += 'abc'[index]
-        a += 'abc'[index]
-        a += 'abc'[index]
-        return a
+      if (value.indexOf(2) !== -1 && output[1] === 0) {
+        output[1] = key
       }
-      // a += b.values.includes(1) ? 'abc'[i] : ''
-      // a += b.values.includes(2) ? 'abc'[i] : ''
-      // a += b.values.includes(3) ? 'abc'[i] : ''
-
-      // console.log('#alert this.state', a, poles)
-      // return a
-    }, '')
+      if (value.indexOf(3) !== -1 && output[2] === 0) {
+        output[2] = key
+      }
+    }
+    return output.join('')
   }
   numberOfDiscs (poles) {
     return Math.max(...poles.reduce((a, b) => {
@@ -121,11 +110,6 @@ class Hanoi {
       }
     }
     let qState = {}
-    const action = this.state([
-      { values: [3, 2, 1]},
-      { values: []},
-      { values: []}
-    ])
 
     // console.log(action)
     Array(10).fill(0).forEach((_, i) => {
