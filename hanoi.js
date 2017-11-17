@@ -1,4 +1,15 @@
 const Pole = require('./pole')
+
+// const moves = {
+//   aaa: ['baa', 'caa'],
+//   baa: ['aaa', 'caa'],
+//   bca: ['baa', 'aca', 'cca'],
+//   cca: ['bca', 'aca', 'cca'],
+//   ccb: ['cca', 'acb', 'bcb'],
+//   acb: ['ccb', 'bcb', 'cca'],
+//   abb: ['acb', 'bbb', 'cbb'],
+// }
+
 class Hanoi {
   constructor (poles) {
     this.poles = poles
@@ -9,7 +20,7 @@ class Hanoi {
   canRemove (poles, pole) {
     return poles[pole].canRemove()
   }
-  remove (poles, yes) {
+  remove (poles) {
     let pole = Math.floor(Math.random() * poles.length)
     while (!this.canRemove(poles, pole)) {
       pole = Math.floor(Math.random() * poles.length)
@@ -19,21 +30,65 @@ class Hanoi {
   canAdd (poles, pole, value) {
     return poles[pole] && poles[pole].canAdd(value)
   }
+  combinations (poles) {
+    const labels = 'abcdefghijklmnopqrstuvwxyz'
+    const count = poles.length
+    return Array(count).fill(0).map((_, i) => {
+      return Array(count).fill(0).map((_, j) => {
+        return Array(count).fill(0).map((_, k) => {
+          return labels[i] + labels[j] + labels[k]
+        }).reduce((a, b) => a.concat(b), [])
+      }).reduce((a, b) => a.concat(b), [])
+    }).reduce((a, b) => a.concat(b), [])
+  }
+  checkPossibleMoves (values) {
+    return this.combinations([1, 2, 3])
+  //   const output = Array(3).fill(0).map((_, i) => {
+  //     return Array(3).fill(0).map((_, j) => {
+  //       const arr = [...values.split('')]
+  //       arr[i] = 'abc'[j]
+  //       return arr.join('')
+  //     })
+  //   }).reduce((a, b) => a.concat(b))
+
+  //   return [...new Set(output)]
+  }
+  mapStrToPoles (values) {
+    const a = values.match(/a/g)
+    const b = values.match(/b/g)
+    const c = values.match(/c/g)
+    return [
+      this.poleWithDiscs((a && a.length) || 0),
+      this.poleWithDiscs((b && b.length) || 0),
+      this.poleWithDiscs((c && c.length) || 0)
+    ]
+  }
+  poleWithDiscs (len) {
+    return Array(len).fill(0).map((_, i) => {
+      return i + 1
+    }).reverse()
+  }
   add (poles, value) {
     let pole = Math.floor(Math.random() * poles.length)
     while (!this.canAdd(poles, pole, value)) {
       pole = Math.floor(Math.random() * poles.length)
     }
     poles[pole].add(value)
-    return pole
+    return [poles, pole]
   }
   state (poles) {
     return poles.reduce((a, b, i) => {
       let mark = 'a'
       switch (i) {
-        case 0: mark = 'a'; break
-        case 1: mark = 'b'; break
-        case 2: mark = 'c'; break
+        case 0:
+          mark = 'a'
+          break
+        case 1:
+          mark = 'b'
+          break
+        case 2:
+          mark = 'c'
+          break
       }
       a += b.values.includes(1) ? mark : ''
       a += b.values.includes(2) ? mark : ''
@@ -48,42 +103,59 @@ class Hanoi {
   }
   play () {
     let numberOfMoves = 0
-    let rewardMatrix = {}
+    let rewardMatrix = {
+      acc: {
+        ccc: 100
+      },
+      bcc: {
+        ccc: 100
+      }
+    }
     let qState = {}
-    let lastStep = 0
 
     // rewardMatrix['Q(003(::1,2,3), 1:2:1)'] = 100
-    rewardMatrix['Q(002(::1,2), 1:2:1)'] = 100
-    rewardMatrix['Q(002(::1,2), 0:2:1)'] = 100
+    // rewardMatrix['acc']['ccc'] = 100
+    // rewardMatrix['bcc']['ccc'] = 100
 
-    // Array(10).fill(0).forEach((_, i) => {
-    let poles = JSON.parse(JSON.stringify(this.poles))
-    poles = poles.map((pole) => {
-      return new Pole(pole.values)
-    })
-    console.log('initial state:', this.state(poles))
-    const finalLength = this.numberOfDiscs(poles)
-    while (poles[poles.length - 1].values.length !== finalLength) {
-      const [peg, start] = this.remove(poles)
-      const end = this.add(poles, peg)
-      // console.log(`move ${peg} from ${start} to ${end}`)
-      // Describes the states for each poles
-      const state = this.state(poles)
-      const action = `${start}:${end}:${peg}`
-      // Create a R-Matrix (reward) that contains state x action
-      const q = `Q(${state}, ${action})`
+    Array(10).fill(0).forEach((_, i) => {
+      let poles = JSON.parse(JSON.stringify(this.poles))
+      poles = poles.map((pole) => {
+        return new Pole(pole.values)
+      })
+      const finalLength = this.numberOfDiscs(poles)
+      while (poles[poles.length - 1].values.length !== finalLength) {
+        const state = this.state(poles)
+        const [peg, start] = this.remove(poles)
+        const [updatedPoles, end] = this.add(poles, peg)
+        console.log('#updatedPoles', updatedPoles)
 
-      if (!qState[q]) {
-        qState[q] = 0
-      } else {
-        const r = rewardMatrix[lastStep] ? rewardMatrix[lastStep] : 0
-        qState[q] = r + 0.8 * qState[q]
+        // console.log(`move ${peg} from ${start} to ${end}`)
+        // Describes the states for each poles
+        const action = this.state(updatedPoles)
+        if (!qState[state]) {
+          qState[state] = {}
+        }
+        if (!qState[state][action]) {
+          qState[state][action] = 0
+        }
+        const r = rewardMatrix[state] && rewardMatrix[state][action] ? rewardMatrix[state][action] : 0
+        console.log('this.checkPossibleMoves(action)', this.checkPossibleMoves(action))
+        const maxReward = Math.max(...this.checkPossibleMoves(action).map((move) => {
+          // if (!qState[state]) {
+          //   qState[state] = {}
+          // }
+          // if (!qState[state][move]) {
+          //   qState[state][move] = 0
+          // }
+          return qState[action] && qState[action][move] ? qState[action][move] : 0
+        }))
+        console.log('maxreward', maxReward)
+        qState[state][action] = r + 0.8 * maxReward
+
+        numberOfMoves += 1
       }
-      lastStep = q
-      numberOfMoves += 1
-    }
-    console.log(`completed in ${numberOfMoves} moves with #lastStep = ${lastStep}`, poles)
-    // })
+      console.log(`completed in ${numberOfMoves} moves with #lastStep`, poles, qState)
+    })
   }
 }
 
